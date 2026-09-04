@@ -60,7 +60,7 @@ cd copilot-adoption-explorer
 Bootstrap creates an app registration in your Azure tenant and obtains credentials.
 
 ```bash
-python src/bootstrap.py --tenant-id YOUR_TENANT_ID
+python src/bootstrap.py YOUR_TENANT_ID
 ```
 
 **Find your tenant ID:**
@@ -95,10 +95,10 @@ If all checks pass, proceed to Step 4.
 This does the heavy lifting: collects from Graph, builds reports.
 
 ```bash
-python run.py --leader-upn manager@company.onmicrosoft.com
+python run.py
 ```
 
-**Replace** `manager@company.onmicrosoft.com` with the actual UPN of the leader whose org you want to analyze.
+After collection, select the leader in the dashboard to view their direct reports or entire organization.
 
 **Output files created in `out/`:**
 - `report.html` — Interactive dashboard (open in browser)
@@ -144,17 +144,18 @@ xdg-open out/report.html
 
 ### **Report for a different leader**
 ```bash
-python run.py --leader-upn another-manager@company.onmicrosoft.com
+python run.py
 ```
+Then choose the leader in the dashboard.
 
 ### **Include disabled users**
 ```bash
-python run.py --leader-upn manager@company.onmicrosoft.com --include-disabled
+python run.py --include-disabled
 ```
 
 ### **Faster collection (fewer parallel threads)**
 ```bash
-python run.py --leader-upn manager@company.onmicrosoft.com --workers 2
+python run.py --workers 2
 ```
 
 ### **Rebuild reports from cached data** (no Graph call)

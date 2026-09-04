@@ -88,13 +88,21 @@ def collect(cfg: dict, *, include_disabled: bool = False, workers: int = 8) -> d
     # ---- 0. report names must already be visible -----------------------
     try:
         s = g.get_json("/beta/admin/reportSettings")
+        if s.get("_error"):
+            raise RuntimeError(
+                "could not verify report name concealment. "
+                "Refusing to collect until report settings are readable."
+            )
         if s.get("displayConcealedNames"):
             raise RuntimeError(
                 "report name concealment is ON. Run preflight.py and explicitly "
                 "approve the tenant-wide setting change before collecting."
             )
     except GraphError as e:
-        notes.append(f"reportSettings: {e.status}")
+        raise RuntimeError(
+            f"could not verify report name concealment (HTTP {e.status}). "
+            "Refusing to collect until report settings are readable."
+        ) from e
 
     # ---- 1. tenant SKUs -------------------------------------------------
     skus = list(g.paged("/v1.0/subscribedSkus"))

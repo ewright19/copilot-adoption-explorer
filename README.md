@@ -100,8 +100,8 @@ whether interaction history is flowing.
 
 1. **"Display concealed user names" defaults to ON.** When on, Graph returns hashed UPNs and
    *every* user-level report is silently useless. The collector checks
-   `/beta/admin/reportSettings` and turns it off on each run — this is a **tenant-wide setting
-   change**, so get the customer's agreement first.
+   `/beta/admin/reportSettings`. If concealment is enabled, run `preflight.py` and explicitly
+   approve the **tenant-wide setting change** before collection; collection itself never changes it.
 2. **The Copilot usage report gives dates, not counts** — and in some tenants the activity-date
    columns come back blank entirely. Never build adoption metrics on it alone.
 3. **Directory attributes are often empty.** `department` / `jobTitle` / `officeLocation` /

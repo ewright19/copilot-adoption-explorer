@@ -113,7 +113,9 @@ def main() -> int:
     try:
         s = gc.get_json("/beta/admin/reportSettings", tolerate=(401, 403))
         if s.get("_error"):
-            warn("could not read report settings")
+            fail("could not read report settings",
+                 "verify ReportSettings.ReadWrite.All and retry")
+            return report()
         elif s.get("displayConcealedNames"):
             warn("report name concealment is ON - user names are hashed",
                  "the collector turns this OFF (a TENANT-WIDE change). Get customer sign-off.")
@@ -133,8 +135,10 @@ def main() -> int:
                 return report()
         else:
             ok("report name concealment is off")
-    except Exception:
-        warn("could not read report settings")
+    except Exception as e:
+        fail(f"could not read report settings: {e}",
+             "verify Graph access and retry")
+        return report()
 
     cop: list = []
     try:
