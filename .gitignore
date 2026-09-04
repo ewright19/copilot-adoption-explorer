@@ -1,0 +1,9 @@
+config/app.json
+out/*.db
+out/*.html
+out/*.xlsx
+out/*.csv
+out/*.png
+dist/
+__pycache__/
+*.pyc
