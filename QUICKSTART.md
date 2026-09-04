@@ -207,6 +207,17 @@ copilot-adoption-explorer/
 
 ⚠️ **Keep `config/app.json` secure** — it contains a client secret valid for 24 months.
 
+**On shared machines, restrict file permissions:**
+```bash
+# Windows PowerShell
+icacls config/app.json /grant:r "%USERNAME%:F" /inheritance:r
+
+# Linux/macOS
+chmod 600 config/app.json
+```
+
+**Never commit it to source control** — it is already in `.gitignore` but stay vigilant.
+
 ---
 
 ## Share the Report
@@ -241,6 +252,15 @@ It does **NOT**:
 - ❌ Track keystrokes or browser activity
 - ❌ Send data to external services
 - ❌ Store passwords or secrets in reports
+
+### ⚠️ Data Security
+
+**The SQLite database (`out/copilot.db`) and Excel workbook accumulate user-level data.** Treat them with the same care as HR or personnel reports:
+
+- **Local use only** — Do not store unencrypted on shared machines or cloud without encryption
+- **Access control** — Restrict to approved users only (via file permissions or folder sharing)
+- **Production deployments** — Use Azure Automation with managed identity or encrypt at rest
+- **Retention** — Delete old reports when no longer needed
 
 ---
 

@@ -117,6 +117,12 @@ def main() -> int:
         elif s.get("displayConcealedNames"):
             warn("report name concealment is ON - user names are hashed",
                  "the collector turns this OFF (a TENANT-WIDE change). Get customer sign-off.")
+            # Require explicit confirmation before proceeding
+            response = input("\n⚠️  Confirm you have customer approval to disable report name concealment? (yes/no): ").strip().lower()
+            if response != "yes":
+                fail("concealment toggle not confirmed",
+                     "Run again when you have explicit customer approval")
+                return report()
         else:
             ok("report name concealment is off")
     except Exception:

@@ -12,6 +12,11 @@ import pathlib
 import sys
 import time
 
+# Validate Python version
+if sys.version_info < (3, 9):
+    print(f"Python 3.9+ required (you have {sys.version_info.major}.{sys.version_info.minor})", file=sys.stderr)
+    sys.exit(2)
+
 ROOT = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT / "src"))
 
@@ -30,7 +35,7 @@ def main() -> int:
     cfg_path = ROOT / "config" / "app.json"
     if not args.build_only:
         if not cfg_path.exists():
-            print("No config/app.json - run:  python src/bootstrap.py <tenant-id>", file=sys.stderr)
+            print("No config/app.json - run:  python src\\bootstrap.py <tenant-id>", file=sys.stderr)
             return 2
         cfg = json.loads(cfg_path.read_text(encoding="utf-8"))
         print("== Collecting from Microsoft Graph ==")
