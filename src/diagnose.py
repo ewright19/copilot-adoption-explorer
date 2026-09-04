@@ -22,9 +22,7 @@ try:
     s = g.get_json("/beta/admin/reportSettings")
     print("   current:", s.get("displayConcealedNames"))
     if s.get("displayConcealedNames"):
-        r = g._request("PATCH", "/beta/admin/reportSettings",
-                       json_body={"displayConcealedNames": False})
-        print("   -> disabled concealment, status", r.status_code)
+        print("   -> concealment is enabled; run preflight.py to review and explicitly approve the tenant-wide change")
 except GraphError as e:
     print("   ERR", e)
 

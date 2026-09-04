@@ -69,7 +69,7 @@ class GraphClient:
         delay = 2.0
         last: requests.Response | None = None
         for attempt in range(self.max_retries):
-            h = {"Authorization": f"Bearer {self._access_token()}",
+            h = {"Authorization": "Bearer " + self._access_token(),
                  "Accept": "application/json",
                  "ConsistencyLevel": "eventual"}
             if headers:

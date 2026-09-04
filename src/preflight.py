@@ -123,6 +123,14 @@ def main() -> int:
                 fail("concealment toggle not confirmed",
                      "Run again when you have explicit customer approval")
                 return report()
+            try:
+                gc._request("PATCH", "/beta/admin/reportSettings",
+                            json_body={"displayConcealedNames": False})
+                ok("report name concealment disabled with explicit approval")
+            except GraphError as e:
+                fail(f"could not disable report name concealment (HTTP {e.status})",
+                     "verify ReportSettings.ReadWrite.All and retry")
+                return report()
         else:
             ok("report name concealment is off")
     except Exception:

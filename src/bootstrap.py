@@ -9,6 +9,7 @@ import json
 import pathlib
 import sys
 import time
+import uuid
 
 import requests
 
@@ -85,7 +86,7 @@ def device_login() -> str:
 
 class G:
     def __init__(self, token: str):
-        self.h = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
+        self.h = {"Authorization": "Bearer " + token, "Content-Type": "application/json"}
 
     def get(self, path: str) -> dict:
         r = requests.get(f"https://graph.microsoft.com/v1.0{path}", headers=self.h, timeout=120)
@@ -123,18 +124,15 @@ def main() -> None:
         roles.append({"name": name, "id": role["id"]})
     print(f"Resolved {len(roles)}/{len(REQUIRED)} app-only permissions", flush=True)
 
-    # app registration (reuse if present)
-    existing = g.get(f"/applications?$filter=displayName eq '{APP_NAME}'")["value"]
-    if existing:
-        app = existing[0]
-        print(f"Reusing app {app['appId']}", flush=True)
-    else:
-        app = g.post("/applications", {
-            "displayName": APP_NAME,
-            "signInAudience": "AzureADMyOrg",
-            "description": "Read-only collector for user-level M365 Copilot adoption + prompt trends.",
-        })
-        print(f"Created app {app['appId']}", flush=True)
+    # Always create a uniquely named app; never grant privileges to an app
+    # selected solely by a display-name match.
+    app_name = f"{APP_NAME} - {uuid.uuid4().hex[:8]}"
+    app = g.post("/applications", {
+        "displayName": app_name,
+        "signInAudience": "AzureADMyOrg",
+        "description": "Read-only collector for user-level M365 Copilot adoption + prompt trends.",
+    })
+    print(f"Created app {app['appId']}", flush=True)
 
     g.patch(f"/applications/{app['id']}", {
         "requiredResourceAccess": [{

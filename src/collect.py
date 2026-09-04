@@ -85,14 +85,14 @@ def collect(cfg: dict, *, include_disabled: bool = False, workers: int = 8) -> d
     started = dt.datetime.now(dt.timezone.utc).isoformat()
     notes: list[str] = []
 
-    # ---- 0. make sure report names are not concealed -------------------
+    # ---- 0. report names must already be visible -----------------------
     try:
         s = g.get_json("/beta/admin/reportSettings")
         if s.get("displayConcealedNames"):
-            g._request("PATCH", "/beta/admin/reportSettings",
-                       json_body={"displayConcealedNames": False})
-            notes.append("Disabled report name concealment.")
-            print("  * report anonymisation disabled")
+            raise RuntimeError(
+                "report name concealment is ON. Run preflight.py and explicitly "
+                "approve the tenant-wide setting change before collecting."
+            )
     except GraphError as e:
         notes.append(f"reportSettings: {e.status}")
 
@@ -225,4 +225,3 @@ if __name__ == "__main__":
     st = collect(cfg)
     print(json.dumps(st, indent=2))
     print(f"done in {time.time() - t0:.1f}s -> {DB}")
-

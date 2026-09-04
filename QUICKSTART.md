@@ -28,7 +28,7 @@ The **Copilot Adoption Explorer** exports real user-level Copilot activity (prom
    - App registration permission in Azure AD
    - Report access to Graph API interaction history
 
-2. ✅ **Python 3.8+** on your machine
+2. ✅ **Python 3.9+** on your machine
    - Check: `python --version`
    - Install: https://www.python.org/downloads/ (add to PATH during install)
 
