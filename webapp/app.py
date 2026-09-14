@@ -164,7 +164,7 @@ def dashboard():
         "<div class='card' style='display:flex;justify-content:space-between;"
         "align-items:center;margin-bottom:12px;gap:12px'>"
         f"<div>Signed in as <b>{_esc(user['name'])}</b> "
-        f"({_esc(user['upn'])}) &middot; showing only the org(s) you're authorized for</div>"
+        f"({_esc(user['upn'])}) &middot; showing only your Entra direct reports</div>"
         "<div><a href='/logout'>Sign out</a></div></div>"
     )
     return build_report.render_html(filtered, user_banner=banner)

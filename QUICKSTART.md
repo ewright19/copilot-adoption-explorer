@@ -15,7 +15,7 @@ The **Copilot Adoption Explorer** exports real user-level Copilot activity (prom
 
 **Scopes to:**
 - Any manager or leader
-- Their direct reports + transitive org
+- Their direct reports
 - Licensed AND Copilot Chat users
 
 ---
@@ -98,12 +98,14 @@ This does the heavy lifting: collects from Graph, builds reports.
 python run.py
 ```
 
-After collection, select the leader in the dashboard to view their direct reports or entire organization.
+After collection, select the leader in the dashboard to view their direct reports or entire
+organization in the static export. For server-enforced manager access, follow the secured web app
+setup in `INSTALL.md`.
 
 **Output files created in `out/`:**
-- `report.html` — Interactive dashboard (open in browser)
-- `copilot_adoption_report.xlsx` — Excel workbook
-- `copilot_adoption_report.csv` — Raw data
+- `copilot-adoption-explorer.html` — Interactive dashboard (open in browser)
+- `copilot-adoption.xlsx` — Excel workbook
+- `copilot-user-detail.csv` — Raw data
 
 ---
 
@@ -112,13 +114,13 @@ After collection, select the leader in the dashboard to view their direct report
 ### **Open the report:**
 ```bash
 # Windows
-start out/report.html
+start out/copilot-adoption-explorer.html
 
 # macOS
-open out/report.html
+open out/copilot-adoption-explorer.html
 
 # Linux
-xdg-open out/report.html
+xdg-open out/copilot-adoption-explorer.html
 ```
 
 ### **Dashboard tabs:**
@@ -195,10 +197,10 @@ After running, your files are:
 ```
 copilot-adoption-explorer/
 ├── out/
-│   ├── report.html              ← Open this in browser
-│   ├── copilot_adoption_report.xlsx
-│   ├── copilot_adoption_report.csv
-│   └── copilot_adoption.db      ← Local data cache
+│   ├── copilot-adoption-explorer.html  ← Open this in browser
+│   ├── copilot-adoption.xlsx
+│   ├── copilot-user-detail.csv
+│   └── copilot.db                      ← Local data cache
 ├── config/
 │   └── app.json                 ← Your credentials (keep safe!)
 ├── src/

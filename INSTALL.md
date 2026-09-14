@@ -56,7 +56,7 @@ python -c "import sys; print(sys.executable)"
 
 ```powershell
 cd copilot-adoption-explorer
-pip install -r requirements.txt
+python -m pip install -r requirements.txt
 ```
 
 ## Step 2 — Register the application
@@ -80,6 +80,7 @@ grants admin consent, creates a client secret, and writes `config/app.json`.
 | `Organization.Read.All` | Subscribed SKUs and seat counts |
 | `Reports.Read.All` | Copilot usage report (corroborating signal) |
 | `ReportSettings.ReadWrite.All` | Turn off report name concealment |
+| `GroupMember.Read.All` | Check delegate/admin group membership for the secured web app |
 
 > **These must be *Application* permissions, not Delegated.** The delegated form of
 > `AiEnterpriseInteraction.Read.All` only ever returns the signed-in user's own interactions
@@ -123,7 +124,9 @@ python run.py --include-disabled  # include disabled accounts
 
 ---
 
-## Step 5 — Share with managers
+## Step 5 — Choose a delivery mode
+
+### Option A: Static export
 
 `copilot-adoption-explorer.html` is a single file with no external dependencies. Email it, or
 drop it in SharePoint/OneDrive — it renders correctly in the in-browser preview.
@@ -136,6 +139,61 @@ copy it and send a manager straight to their own view. **Export CSV** exports th
 > and share only with people entitled to see it.
 
 ---
+
+### Option B: Secured web app
+
+Use this mode when managers must sign in and the server must enforce that each manager sees
+only their own **direct reports**. The static HTML cannot provide this guarantee because its
+data is already embedded in the file.
+
+The secured app uses two separate Entra app registrations:
+
+1. The app-only collector created by `bootstrap.py`.
+2. A delegated sign-in app created by `bootstrap_webapp.py`.
+
+Create the sign-in app with a redirect URI that exactly matches the URL users will open:
+
+```powershell
+python src\bootstrap_webapp.py contoso.onmicrosoft.com http://localhost:5000/auth/callback
+```
+
+For production, use the HTTPS hostname instead:
+
+```powershell
+python src\bootstrap_webapp.py contoso.onmicrosoft.com https://copilot.example.com/auth/callback
+```
+
+Configure optional delegate/admin groups:
+
+```powershell
+Copy-Item config\access_control.json.example config\access_control.json
+notepad config\access_control.json
+```
+
+* A manager does not need to be listed. If their UPN is present in the collected Entra
+  hierarchy, they automatically see their direct reports.
+* A delegate group grants access to the direct reports of the mapped `leaderUpn`.
+* Leave `adminGroupId` empty unless a reporting administrator needs access to every configured
+  leader's direct reports.
+* `config/access_control.json` is gitignored. Never commit real group IDs or user identifiers.
+
+For local HTTP testing only:
+
+```powershell
+$env:WEBAPP_DEV_INSECURE_COOKIES = "1"
+python webapp\app.py
+```
+
+Open `http://localhost:5000/`, sign in, and sign out/in again after changing access settings.
+For production, run behind HTTPS and use the production WSGI server installed by
+`requirements.txt`:
+
+```powershell
+waitress-serve --listen=127.0.0.1:5000 webapp.app:app
+```
+
+Do not expose the Flask development server directly to the internet. Protect `config/app.json`
+and `config/webapp.json`; both contain client secrets and are already gitignored.
 
 ## Keeping it current
 

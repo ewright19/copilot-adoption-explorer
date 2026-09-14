@@ -146,18 +146,19 @@ The static HTML/XLSX/CSV export above is a **single self-contained file** — an
 file can see everything in it via View Source, so it should only be shared with people who are
 already allowed to see the whole dataset.
 
-If you need a leader (e.g. Amber) and her delegates to sign in and see **only her org**, with the
+If you need a leader (e.g. Amber) and her delegates to sign in and see **only her direct reports**, with the
 server enforcing that boundary (not a client-side toggle that could be bypassed), use `webapp/app.py`
 instead. It requires hosting (it is a running service, not an emailable file) but gives real
 per-person access control:
 
 * Each visitor signs in with their own Microsoft 365 account (Entra ID / MSAL, authorization-code
   flow).
-* A leader automatically sees their own org — this needs **no configuration**, it falls out of the
-  manager hierarchy already in the snapshot.
-* A **delegate** (someone covering for a leader) sees that leader's org only if they're a member of
+* A leader automatically sees their direct reports — this needs **no configuration**, and falls out
+  of the Entra manager hierarchy already in the snapshot.
+* A **delegate** (someone covering for a leader) sees that leader's direct reports only if they're a member of
   an Azure AD group you configure in `config/access_control.json`.
-* An optional **admin group** can be granted the full-tenant view for IT/reporting admins.
+* An optional **admin group** can be granted access to every configured leader's direct reports
+  for IT/reporting admins.
 * The server computes the viewer's authorized scope and builds a **filtered** payload before
   anything is sent to the browser — a user literally cannot receive another leader's data over the
   wire, so there is nothing to leak via DevTools.
@@ -177,13 +178,17 @@ python src\bootstrap_webapp.py <tenant-id-or-domain> http://localhost:5000/auth/
 copy config\access_control.json.example config\access_control.json
 notepad config\access_control.json   # fill in adminGroupId / delegateGroupId as needed
 
-# 4. Install the extra web dependencies and run it.
-pip install -r requirements.txt
+# 4. Install dependencies and run it.
+python -m pip install -r requirements.txt
+
+# Local HTTP testing only:
+$env:WEBAPP_DEV_INSECURE_COOKIES = "1"
 python webapp\app.py
 ```
 
 Then browse to `http://localhost:5000/` — you'll be redirected to Microsoft sign-in, and land on a
-dashboard scoped to whatever org(s) you're authorized for.
+dashboard containing only the direct reports authorized by the signed-in user's Entra manager
+relationship or configured delegate/admin group.
 
 ### Deploying it for real
 
@@ -192,8 +197,9 @@ dashboard scoped to whatever org(s) you're authorized for.
   For **local testing only**, set `WEBAPP_DEV_INSECURE_COOKIES=1` to allow `http://localhost`.
 * Update the redirect URI to your real hostname (re-run `bootstrap_webapp.py`, or add an extra
   redirect URI in Entra admin center → App registrations → your app → Authentication).
-* Use a production WSGI server (`waitress`, `gunicorn`, or the platform's built-in one) — the
-  Flask dev server printed at startup is not for production traffic.
+* Use the installed production WSGI server for a simple Windows deployment:
+  `waitress-serve --listen=127.0.0.1:5000 webapp.app:app`. The Flask dev server is for local
+  testing only.
 * `config/webapp.json` and `config/access_control.json` are gitignored and contain secrets/UPNs —
   never commit them; deploy them as app settings / a mounted secret instead.
 
@@ -217,4 +223,3 @@ copilot-adoption-explorer/
   webapp/access_control.py       leader self-match / delegate group / admin group resolution
   out/                           generated artefacts (gitignored)
 ```
-

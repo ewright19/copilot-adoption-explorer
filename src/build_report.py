@@ -176,8 +176,9 @@ def find_user_index_by_upn(payload: dict, upn: str) -> int | None:
 
 def filter_payload_for_leaders(payload: dict, leader_indices: set[int]) -> dict:
     """Return a NEW payload containing ONLY the people visible to a caller who
-    is authorized for the given leader indices (their own org via self-match,
-    or an org they are an approved delegate/admin for).
+    is authorized for the given leader indices. Each authorized leader sees
+    only their direct reports; the hierarchy comes from the Entra manager
+    relationships captured in the snapshot.
 
     This is the actual security boundary: the result is the ONLY thing ever
     serialized to a browser by the web app, so a user can never see another
@@ -191,9 +192,7 @@ def filter_payload_for_leaders(payload: dict, leader_indices: set[int]) -> dict:
     for li in leader_indices:
         key = str(li)
         if key in mgrs:
-            visible.update(mgrs[key]["o"])
-        elif 0 <= li < len(users):
-            visible.add(li)  # leader has no direct reports yet - still sees self
+            visible.update(mgrs[key]["d"])
 
     if not visible:
         return {"meta": payload["meta"], "users": [], "mgrs": {}}

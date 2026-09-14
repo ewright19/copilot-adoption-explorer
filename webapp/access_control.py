@@ -37,13 +37,14 @@ def resolve_scope(payload: dict, app_cfg: dict, user_oid: str, user_upn: str) ->
 
     Three independent ways to gain scope, any combination applies:
       1. Self-match  - the signed-in UPN IS a leader in the dataset (they have
-         direct reports). No configuration needed - this just works from the
-         directory data already collected.
+         direct reports). No configuration needed - this uses the Entra manager
+         relationship already captured in the snapshot.
       2. Delegate match - config/access_control.json maps a leader's UPN to an
          Azure AD group id, and the signed-in user is a member of that group
          (checked live via Graph app-only checkMemberGroups).
       3. Admin match - config/access_control.json sets adminGroupId, and the
-         signed-in user is a member -> full-tenant view (every leader's org).
+         signed-in user is a member -> authorized view for every leader's
+         direct reports. This is intentionally not a full-tenant view.
 
     Raises AccessDenied if none of the above apply.
     """
