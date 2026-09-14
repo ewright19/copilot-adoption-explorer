@@ -35,11 +35,12 @@ INCLUDE = [
     "webapp/app.py",
     "webapp/access_control.py",
     "config/access_control.json.example",
+    "config/branding.json.example",
 ]
 
 # Exact real-config filenames that must never be bundled (the .example templates
 # of these are fine and are handled separately below).
-FORBIDDEN_EXACT = {"config/app.json", "config/webapp.json", "config/access_control.json"}
+FORBIDDEN_EXACT = {"config/app.json", "config/webapp.json", "config/access_control.json", "config/branding.json"}
 # Substring patterns that must never appear anywhere in a shipped path.
 FORBIDDEN_SUBSTR = ("out/", "dist/", "__pycache__", ".db", ".xlsx", ".csv", ".png")
 

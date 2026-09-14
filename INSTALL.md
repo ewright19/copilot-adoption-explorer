@@ -130,6 +130,18 @@ python run.py --build-only        # rebuild reports without re-querying Graph
 python run.py --include-disabled  # include disabled accounts
 ```
 
+**Want your own logo and colours on the report instead of the built-in look?**
+
+```powershell
+copy config\branding.json.example config\branding.json
+```
+
+Fill in `companyName`, `logoDataUri` (your logo as a `data:...;base64,...` string), and
+`primaryColor` — see the "Custom branding" section of README.md for the full field list and a
+one-line command to convert a logo image file to `logoDataUri`. The file is optional and
+gitignored; leave it out to keep the default look. Rerun `python run.py --build-only` afterwards
+to regenerate the branded files.
+
 ---
 
 ## Step 5 — Choose a delivery mode

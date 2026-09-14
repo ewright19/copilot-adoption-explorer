@@ -1,0 +1,18 @@
+{
+  "_comment": "Copy this to config/branding.json to put your own logo and colours on the dashboard and Excel workbook. That file is gitignored - it is local to your deployment. Every field is optional; leave the file absent (or a field blank) to use the tool's built-in look.",
+
+  "companyName": "",
+  "_companyName_comment": "Shown next to the logo in the dashboard header, in the browser tab title, and as a 'Prepared for' row in the Excel Summary sheet.",
+
+  "logoDataUri": "",
+  "_logoDataUri_comment": "A self-contained image as a data: URI, e.g. 'data:image/png;base64,iVBORw0KG...' or 'data:image/svg+xml;base64,...'. The dashboard is a single portable HTML file with no external file references, so the logo must be embedded this way rather than linked as a separate image file. Keep it small (an icon/wordmark, not a full-resolution photo) so the dashboard stays lightweight.",
+
+  "primaryColor": "#b11f4b",
+  "_primaryColor_comment": "Hex accent colour used for buttons, highlighted rows, chart bars, and the Excel header row fill. Defaults to the tool's built-in magenta if omitted or invalid.",
+
+  "accentHoverColor": "",
+  "_accentHoverColor_comment": "Optional hover/active shade of primaryColor. Auto-derived (slightly darkened) from primaryColor if left blank.",
+
+  "accentTextColor": "",
+  "_accentTextColor_comment": "Optional text colour to use on top of primaryColor (e.g. button/header text). Defaults to white - only change this if your primary colour is very light."
+}

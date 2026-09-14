@@ -16,8 +16,77 @@ import sqlite3
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 DB = ROOT / "out" / "copilot.db"
 OUT = ROOT / "out"
+BRANDING = ROOT / "config" / "branding.json"
 
 CHAT_SURFACES = {"Copilot Chat", "Copilot Chat (Web)", "Copilot Chat (Private)"}
+
+DEFAULT_ACCENT = "#b11f4b"
+
+# --------------------------------------------------------------------------
+# 0. Optional branding (custom logo / colour scheme)
+# --------------------------------------------------------------------------
+def _hex_to_rgb(hexcolor: str) -> tuple[int, int, int]:
+    h = hexcolor.lstrip("#")
+    if len(h) == 3:
+        h = "".join(c * 2 for c in h)
+    return int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16)
+
+
+def _shade(hexcolor: str, amount: float) -> str:
+    """Darken (amount < 0) or lighten (amount > 0) a hex colour by `amount` (-1..1)."""
+    r, g, b = _hex_to_rgb(hexcolor)
+
+    def adj(c: int) -> int:
+        if amount >= 0:
+            return round(c + (255 - c) * amount)
+        return round(c * (1 + amount))
+
+    return f"#{adj(r):02x}{adj(g):02x}{adj(b):02x}"
+
+
+def _rgba(hexcolor: str, alpha: float) -> str:
+    r, g, b = _hex_to_rgb(hexcolor)
+    return f"rgba({r}, {g}, {b}, {alpha})"
+
+
+def load_branding() -> dict:
+    """Read config/branding.json if present. Every field is optional - anything
+    left blank falls back to the tool's built-in default look, so this file
+    never has to exist for the report to render normally.
+
+    Copy config/branding.json.example to get started; that file documents
+    every field. See README.md "Custom branding" for details.
+    """
+    data: dict = {}
+    if BRANDING.exists():
+        try:
+            data = json.loads(BRANDING.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            data = {}
+    data = {k: v for k, v in data.items() if not k.startswith("_")}
+
+    company = str(data.get("companyName") or "").strip()
+    logo = str(data.get("logoDataUri") or "").strip()
+    primary = str(data.get("primaryColor") or "").strip() or DEFAULT_ACCENT
+    try:
+        _hex_to_rgb(primary)
+    except (ValueError, IndexError):
+        primary = DEFAULT_ACCENT  # ignore a malformed colour rather than fail the build
+
+    hover = str(data.get("accentHoverColor") or "").strip()
+    if not hover:
+        hover = _shade(primary, -0.12)
+    text_on_accent = str(data.get("accentTextColor") or "").strip() or "#ffffff"
+
+    return {
+        "companyName": company,
+        "logoDataUri": logo,
+        "primaryColor": primary,
+        "accentHoverColor": hover,
+        "accentTextColor": text_on_accent,
+        "accentSoftColor": _rgba(primary, 0.08),
+        "highlightColor": _rgba(primary, 0.12),
+    }
 
 
 # --------------------------------------------------------------------------
@@ -248,7 +317,7 @@ def write_csv(p: dict) -> pathlib.Path:
     return path
 
 
-def write_xlsx(p: dict) -> pathlib.Path:
+def write_xlsx(p: dict, *, branding: dict | None = None) -> pathlib.Path:
     try:
         from openpyxl import Workbook
         from openpyxl.styles import Alignment, Font, PatternFill
@@ -260,13 +329,16 @@ def write_xlsx(p: dict) -> pathlib.Path:
             "(the HTML dashboard and CSV were still produced)"
         )
 
+    if branding is None:
+        branding = load_branding()
+
     months = p["meta"]["months"]
     users = p["users"]
     path = OUT / "copilot-adoption.xlsx"
     wb = Workbook()
 
-    head_fill = PatternFill("solid", fgColor="B11F4B")
-    head_font = Font(color="FFFFFF", bold=True)
+    head_fill = PatternFill("solid", fgColor=branding["primaryColor"].lstrip("#").upper())
+    head_font = Font(color=branding["accentTextColor"].lstrip("#").upper() or "FFFFFF", bold=True)
 
     def style(ws, ncols, freeze="A2"):
         for c in range(1, ncols + 1):
@@ -297,6 +369,10 @@ def write_xlsx(p: dict) -> pathlib.Path:
     total_prompts = sum(sum(u["mo"].values()) for u in users)
     rows = [
         ("Metric", "Value"),
+    ]
+    if branding.get("companyName"):
+        rows.append(("Prepared for", branding["companyName"]))
+    rows += [
         ("Tenant", p["meta"]["tenant"]),
         ("Generated", p["meta"]["generated"]),
         ("Months covered", f"{months[0]} to {months[-1]}" if months else "n/a"),
@@ -412,7 +488,7 @@ HTML = r"""<!DOCTYPE html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Copilot Adoption Explorer</title>
+<title>__BRAND_TITLE__</title>
 <script>
   (() => {
     const param = new URLSearchParams(window.location.search).get("scoutTheme");
@@ -544,6 +620,10 @@ textarea { width: 100%; height: 150px; margin-top: 10px; font-family: Consolas, 
 .legend { display:flex; gap:14px; flex-wrap:wrap; font-size:11.5px; color:var(--cp-text-muted); margin-top:8px;}
 .legend i { display:inline-block; width:10px; height:10px; border-radius:3px; margin-right:5px; vertical-align:middle;}
 .pathcell { font-size:11.5px; color: var(--cp-text-soft); }
+.cp-brand { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.cp-brand img { max-height: 34px; max-width: 180px; object-fit: contain; }
+.cp-brand span { font-size: 13px; font-weight: 600; color: var(--cp-text-muted); }
+__BRAND_STYLE__
 </style>
 </head>
 <body>
@@ -552,6 +632,7 @@ __USER_BANNER__
 
 <header class="card">
   <div>
+    __BRAND_HEADER__
     <h1>Copilot Adoption Explorer</h1>
     <div class="sub" id="subtitle"></div>
   </div>
@@ -956,25 +1037,69 @@ window.addEventListener("hashchange", () => {
 """
 
 
-def render_html(p: dict, *, user_banner: str = "") -> str:
+def render_html(p: dict, *, user_banner: str = "", branding: dict | None = None) -> str:
     """Render the dashboard to an HTML string (used by both the static export
     and the secured web app, which injects a signed-in-user banner and only
     ever passes an ALREADY SERVER-SIDE-FILTERED payload for the caller's scope).
+
+    `branding` defaults to config/branding.json (see load_branding()) so both
+    callers get the same custom logo / colour scheme without extra plumbing;
+    pass an explicit dict to override it (e.g. tests).
     """
+    if branding is None:
+        branding = load_branding()
+
+    company = branding.get("companyName", "")
+    title = f"Copilot Adoption Explorer \u2013 {company}" if company else "Copilot Adoption Explorer"
+
+    brand_style = (
+        ":root {\n"
+        f"  --cp-accent: {branding['primaryColor']};\n"
+        f"  --cp-accent-hover: {branding['accentHoverColor']};\n"
+        f"  --cp-accent-soft: {branding['accentSoftColor']};\n"
+        f"  --cp-accent-fg: {branding['accentTextColor']};\n"
+        f"  --cp-highlight: {branding['highlightColor']};\n"
+        "}\n"
+        "html[data-theme=\"dark\"] {\n"
+        f"  --cp-accent: {branding['primaryColor']};\n"
+        f"  --cp-accent-hover: {branding['accentHoverColor']};\n"
+        f"  --cp-accent-soft: {branding['accentSoftColor']};\n"
+        f"  --cp-accent-fg: {branding['accentTextColor']};\n"
+        f"  --cp-highlight: {branding['highlightColor']};\n"
+        "}"
+    )
+
+    brand_header = ""
+    if branding.get("logoDataUri") or company:
+        img = f"<img src=\"{branding['logoDataUri']}\" alt=\"{_esc_html(company)} logo\">" if branding.get("logoDataUri") else ""
+        name = f"<span>{_esc_html(company)}</span>" if company else ""
+        brand_header = f'<div class="cp-brand">{img}{name}</div>'
+
     blob = json.dumps(p, separators=(",", ":")).replace("</", "<\\/")
-    return HTML.replace("__DATA_JSON__", blob).replace("__USER_BANNER__", user_banner)
+    return (
+        HTML.replace("__DATA_JSON__", blob)
+        .replace("__USER_BANNER__", user_banner)
+        .replace("__BRAND_TITLE__", _esc_html(title))
+        .replace("__BRAND_STYLE__", brand_style)
+        .replace("__BRAND_HEADER__", brand_header)
+    )
 
 
-def write_html(p: dict) -> pathlib.Path:
+def _esc_html(s: str) -> str:
+    return (s or "").replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace('"', "&quot;")
+
+
+def write_html(p: dict, *, branding: dict | None = None) -> pathlib.Path:
     path = OUT / "copilot-adoption-explorer.html"
-    path.write_text(render_html(p), encoding="utf-8")
+    path.write_text(render_html(p, branding=branding), encoding="utf-8")
     return path
 
 
 if __name__ == "__main__":
     payload = build_payload()
-    h = write_html(payload)
-    x = write_xlsx(payload)
+    branding = load_branding()
+    h = write_html(payload, branding=branding)
+    x = write_xlsx(payload, branding=branding)
     c = write_csv(payload)
     print(f"users        : {len(payload['users'])}")
     print(f"leaders      : {len(payload['mgrs'])}")

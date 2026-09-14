@@ -1,6 +1,7 @@
 config/app.json
 config/webapp.json
 config/access_control.json
+config/branding.json
 out/*.db
 out/*.html
 out/*.xlsx

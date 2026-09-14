@@ -102,6 +102,41 @@ python src\diagnose.py
 Reports concealment state, SKU/seat counts, whether the usage report returns usable rows, and
 whether interaction history is flowing.
 
+### Custom branding (your logo and colours)
+
+By default the dashboard and Excel workbook use the tool's built-in look. To put your own logo
+and colour scheme on them instead:
+
+```powershell
+copy config\branding.json.example config\branding.json
+```
+
+Edit `config\branding.json` and fill in:
+
+| Field | What it does |
+|---|---|
+| `companyName` | Shown next to the logo, in the browser tab title, and as a "Prepared for" row in the Excel Summary sheet. |
+| `logoDataUri` | Your logo as a `data:image/...;base64,...` URI. The dashboard is a single self-contained HTML file with no external file references, so the logo has to be embedded this way rather than linked as a separate image. |
+| `primaryColor` | Hex accent colour for buttons, highlights, chart bars, and the Excel header row fill. |
+| `accentHoverColor` / `accentTextColor` | Optional - auto-derived from `primaryColor` if left blank. |
+
+To turn an image file into the `logoDataUri` value:
+
+```powershell
+python -c "import base64,sys; d=open(sys.argv[1],'rb').read(); print(f'data:image/png;base64,{base64.b64encode(d).decode()}')" path\to\logo.png
+```
+
+(swap `image/png` for `image/svg+xml` etc. to match your file). Keep it a small icon/wordmark -
+not a full-resolution photo - so the dashboard stays lightweight.
+
+`config/branding.json` is gitignored and never included in `dist/copilot-adoption-explorer.zip`
+(only the `.example` template ships) - it's local to your deployment, same as
+`config/access_control.json`. Every field is optional and the file itself doesn't need to exist;
+leaving it out just uses the built-in look.
+
+Both `python run.py` and the secured web app (below) pick up `config/branding.json` automatically
+- no extra flags needed.
+
 ---
 
 ## Gotchas found in real tenants
