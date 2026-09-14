@@ -215,10 +215,33 @@ commit it to source control (it is gitignored).
 
 | Symptom | Cause and fix |
 |---|---|
+| `RuntimeError: report name concealment is ON` | Run `python src\preflight.py`, approve the tenant-wide change when prompted, then rerun `python run.py`. |
 | `NOT READY - AiEnterpriseInteraction.Read.All denied` | Consented as Delegated instead of Application. Fix in Entra > App registrations > API permissions. |
+| `could not disable report name concealment` | Confirm `ReportSettings.ReadWrite.All` is an **Application** permission with admin consent, then rerun preflight. |
 | All user names look like hashes | Report name concealment is on. `run.py` disables it; re-run. |
 | Everyone shows 0 prompts | Nobody has used Copilot yet, or licences were assigned very recently. |
 | Empty **Manager** column | Manager relationships are not populated in Entra — the org rollup depends on them. |
 | `could not acquire a token` | Client secret expired — re-run `bootstrap.py`. |
 | HTTP 429s in the log | Normal; the client backs off and retries automatically. Lower `--workers`. |
 | Collection is slow | Cost scales with user count. Use `--workers 24` and run off-hours. |
+
+### Report name concealment requires explicit approval
+
+If `run.py` stops with `report name concealment is ON`, this is expected safety behavior.
+The setting is tenant-wide and affects other Microsoft 365 reports. Run preflight from the
+repository root:
+
+```powershell
+python -m pip install -r requirements.txt
+python src\preflight.py
+```
+
+Review the warning and enter `yes` only after the tenant administrator and applicable
+privacy/HR/legal owner approve the change. Then run:
+
+```powershell
+python run.py
+```
+
+If approval is not granted, leave concealment enabled; identifiable user-level reporting cannot
+be produced safely while names are concealed.

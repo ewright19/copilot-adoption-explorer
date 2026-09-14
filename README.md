@@ -203,6 +203,23 @@ relationship or configured delegate/admin group.
 * `config/webapp.json` and `config/access_control.json` are gitignored and contain secrets/UPNs —
   never commit them; deploy them as app settings / a mounted secret instead.
 
+### If collection stops on report name concealment
+
+If `python run.py` reports `RuntimeError: report name concealment is ON`, run preflight from
+the repository root:
+
+```powershell
+python -m pip install -r requirements.txt
+python src\preflight.py
+# At the prompt, enter: yes
+python run.py
+```
+
+This is a tenant-wide Microsoft 365 reporting setting, not a missing Python package. Enter
+`yes` only after the tenant administrator and applicable privacy/HR/legal owner approve
+disabling concealed names. If approval is not granted, leave concealment enabled; this tool
+cannot safely produce identifiable user-level reports while names are concealed.
+
 ---
 
 ## Layout
