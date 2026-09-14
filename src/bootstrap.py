@@ -34,6 +34,10 @@ GRAPH_APP_ID = "00000003-0000-0000-c000-000000000000"
 APP_NAME = "Copilot Adoption Explorer"
 
 REQUIRED = [
+    # Also used server-side by the secured web app to read a signed-in user's
+    # Entra directory roles (users/{id}/transitiveMemberOf/directoryRole), so a
+    # Global Administrator / Global Reader / Reports Reader is recognized
+    # automatically and gets a tenant-wide view.
     "User.Read.All",
     "Organization.Read.All",
     "Reports.Read.All",

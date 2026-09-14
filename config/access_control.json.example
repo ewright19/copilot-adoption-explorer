@@ -2,7 +2,16 @@
   "_comment": "Copy this to config/access_control.json and fill in real values. That file is gitignored - never commit real group IDs or UPNs.",
 
   "adminGroupId": "",
-  "_adminGroupId_comment": "Optional. Azure AD group object ID whose members can access every configured leader's direct reports. Leave empty unless you need an IT/reporting administrator role.",
+  "_adminGroupId_comment": "Optional. Azure AD group object ID whose members get a tenant-wide view. Leave empty unless you need a non-admin IT/reporting role.",
+
+  "adminGroupFullTenant": true,
+  "_adminGroupFullTenant_comment": "When true (default), adminGroupId members see every user in the snapshot. Set to false to limit them to every leader's direct reports instead.",
+
+  "tenantAdminRolesEnabled": true,
+  "_tenantAdminRolesEnabled_comment": "When true (default), a signed-in user holding an active Entra directory role that already grants tenant-wide usage reporting - Global Administrator, Global Reader, Reports Reader, Usage Summary Reports Reader - automatically gets a full-tenant view with no configuration. Set to false to require explicit group membership even for Global Admins.",
+
+  "extraAdminRoleTemplateIds": [],
+  "_extraAdminRoleTemplateIds_comment": "Optional. Additional Entra built-in role TEMPLATE IDs (not role assignment IDs) that should also grant a full-tenant view, e.g. '29232cdf-9323-42fd-ade2-1d097af3e4de' for Exchange Administrator.",
 
   "leaders": [
     {

@@ -159,15 +159,24 @@ def dashboard():
             403,
         )
 
-    filtered = build_report.filter_payload_for_leaders(payload, scope)
+    filtered = (
+        payload if scope.full_tenant
+        else build_report.filter_payload_for_leaders(payload, scope.leader_indices)
+    )
+    what = " &middot; ".join(scope.reasons) if scope.reasons else "your authorized scope"
     banner = (
         "<div class='card' style='display:flex;justify-content:space-between;"
         "align-items:center;margin-bottom:12px;gap:12px'>"
         f"<div>Signed in as <b>{_esc(user['name'])}</b> "
-        f"({_esc(user['upn'])}) &middot; showing only your Entra direct reports</div>"
+        f"({_esc(user['upn'])}) &middot; showing {_esc_keep(what)}</div>"
         "<div><a href='/logout'>Sign out</a></div></div>"
     )
     return build_report.render_html(filtered, user_banner=banner)
+
+
+def _esc_keep(s: str) -> str:
+    """Escape user-derived text but keep the &middot; separators we inserted."""
+    return _esc(s).replace("&amp;middot;", "&middot;")
 
 
 def _esc(s: str) -> str:

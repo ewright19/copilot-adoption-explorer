@@ -196,12 +196,18 @@ per-person access control:
 
 * Each visitor signs in with their own Microsoft 365 account (Entra ID / MSAL, authorization-code
   flow).
+* A **tenant admin** — anyone holding an active **Global Administrator**, **Global Reader**,
+  **Reports Reader**, or **Usage Summary Reports Reader** directory role — automatically gets a
+  **full-tenant view** of every user in the snapshot, with **no configuration**. Their roles are
+  checked live against Entra ID on each sign-in (app-only, server-side). Set
+  `"tenantAdminRolesEnabled": false` in `config/access_control.json` to turn this off, or add more
+  role template IDs via `extraAdminRoleTemplateIds`.
 * A leader automatically sees their direct reports — this needs **no configuration**, and falls out
   of the Entra manager hierarchy already in the snapshot.
 * A **delegate** (someone covering for a leader) sees that leader's direct reports only if they're a member of
   an Azure AD group you configure in `config/access_control.json`.
-* An optional **admin group** can be granted access to every configured leader's direct reports
-  for IT/reporting admins.
+* An optional **admin group** grants a full-tenant view to non-admin IT/reporting staff. Set
+  `"adminGroupFullTenant": false` to restrict it to every leader's direct reports instead.
 * The server computes the viewer's authorized scope and builds a **filtered** payload before
   anything is sent to the browser — a user literally cannot receive another leader's data over the
   wire, so there is nothing to leak via DevTools.
@@ -217,7 +223,8 @@ python src\bootstrap.py <tenant-id-or-domain>
 #    Use your real hostname once you know it; localhost is fine for testing.
 python src\bootstrap_webapp.py <tenant-id-or-domain> http://localhost:5000/auth/callback
 
-# 3. Configure who can see whom.
+# 3. Configure who can see whom. Optional - Global Admins / Global Readers /
+#    Reports Readers already get a full-tenant view with no configuration.
 copy config\access_control.json.example config\access_control.json
 notepad config\access_control.json   # fill in adminGroupId / delegateGroupId as needed
 
@@ -230,8 +237,8 @@ python webapp\app.py
 ```
 
 Then browse to `http://localhost:5000/` — you'll be redirected to Microsoft sign-in, and land on a
-dashboard containing only the direct reports authorized by the signed-in user's Entra manager
-relationship or configured delegate/admin group.
+dashboard containing the whole tenant (if you hold a tenant admin role) or only the direct reports
+authorized by the signed-in user's Entra manager relationship or configured delegate/admin group.
 
 ### Deploying it for real
 
