@@ -517,6 +517,7 @@ HTML = r"""<!DOCTYPE html>
   --cp-danger: #dc2626;
   --cp-warning: #f59e0b;
   --cp-link: #0078d4;
+  --cp-series2: #16a34a;
   --cp-shadow: 0 18px 48px rgba(0, 0, 0, 0.12);
   --cp-overlay: rgba(255, 255, 255, 0.8);
   --cp-panel: rgba(255, 255, 255, 0.86);
@@ -543,6 +544,7 @@ html[data-theme="dark"] {
   --cp-danger: #f87171;
   --cp-warning: #fbbf24;
   --cp-link: #4da6ff;
+  --cp-series2: #4ade80;
   --cp-shadow: 0 18px 48px rgba(0, 0, 0, 0.32);
   --cp-overlay: rgba(41, 41, 41, 0.88);
   --cp-panel: rgba(41, 41, 41, 0.72);
@@ -688,7 +690,7 @@ __USER_BANNER__
     <div id="trend"></div>
     <div class="legend">
       <span><i style="background:var(--cp-accent)"></i>Prompts</span>
-      <span><i style="background:var(--cp-link)"></i>Active users</span>
+      <span><i style="background:var(--cp-series2)"></i>Active users</span>
     </div>
   </div>
   <div class="card">
@@ -879,13 +881,13 @@ function drawTrend(scoped) {
       s += `<text x="${pad.l + i * bw + bw / 2}" y="${h - 8}" text-anchor="middle" font-size="9" fill="var(--cp-text-soft)">${m.slice(2)}</text>`;
   });
   const pts = act.map((a, i) => `${pad.l + i * bw + bw / 2},${pad.t + ih - ih * a / maxA}`).join(" ");
-  s += `<polyline points="${pts}" fill="none" stroke="var(--cp-link)" stroke-width="2" stroke-linejoin="round"/>`;
+  s += `<polyline points="${pts}" fill="none" stroke="var(--cp-series2)" stroke-width="2" stroke-linejoin="round"/>`;
   act.forEach((a, i) => {
-    s += `<circle cx="${pad.l + i * bw + bw / 2}" cy="${pad.t + ih - ih * a / maxA}" r="2.6" fill="var(--cp-link)"><title>${MONTHS[i]}: ${a} active users</title></circle>`;
+    s += `<circle cx="${pad.l + i * bw + bw / 2}" cy="${pad.t + ih - ih * a / maxA}" r="2.6" fill="var(--cp-series2)"><title>${MONTHS[i]}: ${a} active users</title></circle>`;
   });
   [0, 1].forEach(f => {
     const y = pad.t + ih * (1 - f);
-    s += `<text x="${w - pad.r + 6}" y="${y + 4}" font-size="9.5" fill="var(--cp-link)">${Math.round(maxA * f)}</text>`;
+    s += `<text x="${w - pad.r + 6}" y="${y + 4}" font-size="9.5" fill="var(--cp-series2)">${Math.round(maxA * f)}</text>`;
   });
   s += `</svg>`;
   el("trend").innerHTML = s;
