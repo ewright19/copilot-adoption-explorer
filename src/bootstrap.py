@@ -39,6 +39,10 @@ REQUIRED = [
     "Reports.Read.All",
     "ReportSettings.ReadWrite.All",
     "AiEnterpriseInteraction.Read.All",
+    # Only used server-side by the secured web app (webapp/access_control.py) to
+    # check whether a signed-in delegate belongs to a leader's Azure AD group.
+    # Never exposed to a browser. Optional if you never deploy the web app.
+    "GroupMember.Read.All",
 ]
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent

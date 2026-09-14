@@ -100,6 +100,14 @@ class GraphClient:
             return {}
         return resp.json()
 
+    def post_json(self, url: str, body: dict, *, tolerate: Iterable[int] = ()) -> dict:
+        resp = self._request("POST", url, json_body=body, tolerate=tolerate)
+        if resp.status_code >= 400:
+            return {"_error": resp.status_code, "_body": resp.text}
+        if not resp.content:
+            return {}
+        return resp.json()
+
     def paged(self, url: str, *, tolerate: Iterable[int] = (), cap: int | None = None) -> Iterator[dict]:
         """Yield every item across @odata.nextLink pages."""
         seen = 0

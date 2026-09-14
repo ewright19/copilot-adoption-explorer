@@ -26,15 +26,27 @@ INCLUDE = [
     "INSTALL.md",
     ".gitignore",
     "src/bootstrap.py",
+    "src/bootstrap_webapp.py",
     "src/preflight.py",
     "src/diagnose.py",
     "src/graph_client.py",
     "src/collect.py",
     "src/build_report.py",
+    "webapp/app.py",
+    "webapp/access_control.py",
+    "config/access_control.json.example",
 ]
 
-# Anything matching these must never reach the archive.
-FORBIDDEN = ("config/app.json", "out/", "dist/", "__pycache__", ".db", ".xlsx", ".csv", ".png")
+# Exact real-config filenames that must never be bundled (the .example templates
+# of these are fine and are handled separately below).
+FORBIDDEN_EXACT = {"config/app.json", "config/webapp.json", "config/access_control.json"}
+# Substring patterns that must never appear anywhere in a shipped path.
+FORBIDDEN_SUBSTR = ("out/", "dist/", "__pycache__", ".db", ".xlsx", ".csv", ".png")
+
+
+def is_forbidden(path: str) -> bool:
+    norm = path.replace("\\", "/")
+    return norm in FORBIDDEN_EXACT or any(bad in norm for bad in FORBIDDEN_SUBSTR)
 
 
 def main() -> int:
@@ -44,8 +56,7 @@ def main() -> int:
         return 1
 
     for f in INCLUDE:
-        norm = f.replace("\\", "/")
-        if any(bad in norm for bad in FORBIDDEN):
+        if is_forbidden(f):
             print(f"REFUSING TO PACKAGE - '{f}' matches an excluded pattern")
             return 1
 
@@ -65,7 +76,8 @@ def main() -> int:
     with zipfile.ZipFile(out) as z:
         names = z.namelist()
     leaked = [n for n in names
-              if any(bad in n for bad in ("app.json", ".db", ".xlsx", ".csv", ".png"))]
+              if any(bad in n for bad in ("app.json", "webapp.json", ".db", ".xlsx", ".csv", ".png"))
+              and not n.endswith(".example")]
     if leaked:
         out.unlink()
         print("REFUSING TO SHIP - archive contained: " + ", ".join(leaked))

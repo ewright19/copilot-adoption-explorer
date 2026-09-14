@@ -140,16 +140,81 @@ managed identity and host in Azure Automation / an Azure Function.
 
 ---
 
+## Secured web app (real, server-enforced RBAC)
+
+The static HTML/XLSX/CSV export above is a **single self-contained file** — anyone who has the
+file can see everything in it via View Source, so it should only be shared with people who are
+already allowed to see the whole dataset.
+
+If you need a leader (e.g. Amber) and her delegates to sign in and see **only her org**, with the
+server enforcing that boundary (not a client-side toggle that could be bypassed), use `webapp/app.py`
+instead. It requires hosting (it is a running service, not an emailable file) but gives real
+per-person access control:
+
+* Each visitor signs in with their own Microsoft 365 account (Entra ID / MSAL, authorization-code
+  flow).
+* A leader automatically sees their own org — this needs **no configuration**, it falls out of the
+  manager hierarchy already in the snapshot.
+* A **delegate** (someone covering for a leader) sees that leader's org only if they're a member of
+  an Azure AD group you configure in `config/access_control.json`.
+* An optional **admin group** can be granted the full-tenant view for IT/reporting admins.
+* The server computes the viewer's authorized scope and builds a **filtered** payload before
+  anything is sent to the browser — a user literally cannot receive another leader's data over the
+  wire, so there is nothing to leak via DevTools.
+
+### Setup
+
+```powershell
+# 1. If you haven't already, (re-)bootstrap the app-only collector - it now also
+#    requests GroupMember.Read.All, used server-side to check delegate group membership.
+python src\bootstrap.py <tenant-id-or-domain>
+
+# 2. Register a SEPARATE, delegated sign-in app for the web app itself.
+#    Use your real hostname once you know it; localhost is fine for testing.
+python src\bootstrap_webapp.py <tenant-id-or-domain> http://localhost:5000/auth/callback
+
+# 3. Configure who can see whom.
+copy config\access_control.json.example config\access_control.json
+notepad config\access_control.json   # fill in adminGroupId / delegateGroupId as needed
+
+# 4. Install the extra web dependencies and run it.
+pip install -r requirements.txt
+python webapp\app.py
+```
+
+Then browse to `http://localhost:5000/` — you'll be redirected to Microsoft sign-in, and land on a
+dashboard scoped to whatever org(s) you're authorized for.
+
+### Deploying it for real
+
+* Run behind HTTPS (Azure App Service, Azure Container Apps, or any host with a TLS certificate) —
+  session cookies are marked `Secure` by default and browsers will reject them over plain HTTP.
+  For **local testing only**, set `WEBAPP_DEV_INSECURE_COOKIES=1` to allow `http://localhost`.
+* Update the redirect URI to your real hostname (re-run `bootstrap_webapp.py`, or add an extra
+  redirect URI in Entra admin center → App registrations → your app → Authentication).
+* Use a production WSGI server (`waitress`, `gunicorn`, or the platform's built-in one) — the
+  Flask dev server printed at startup is not for production traffic.
+* `config/webapp.json` and `config/access_control.json` are gitignored and contain secrets/UPNs —
+  never commit them; deploy them as app settings / a mounted secret instead.
+
+---
+
 ## Layout
 
 ```
 copilot-adoption-explorer/
-  run.py                 one-command collect + build
-  config/app.json        tenant, client id, secret   (gitignored)
-  src/bootstrap.py       device-code -> app reg + consent + secret
-  src/graph_client.py    token cache, throttle-aware retry, paging, $batch
-  src/collect.py         Graph -> SQLite
-  src/build_report.py    SQLite -> HTML + XLSX + CSV
-  src/diagnose.py        tenant readiness check
-  out/                   generated artefacts (gitignored)
+  run.py                        one-command collect + build (static export)
+  config/app.json                tenant, client id, secret               (gitignored)
+  config/webapp.json             web app sign-in credentials             (gitignored)
+  config/access_control.json     leader -> delegate/admin group mapping  (gitignored)
+  src/bootstrap.py               device-code -> app-only reg + consent + secret
+  src/bootstrap_webapp.py        device-code -> delegated web-app reg + secret
+  src/graph_client.py            token cache, throttle-aware retry, paging, $batch
+  src/collect.py                 Graph -> SQLite
+  src/build_report.py            SQLite -> HTML + XLSX + CSV, + server-side scope filtering
+  src/diagnose.py                tenant readiness check
+  webapp/app.py                  secured, RBAC-scoped Flask dashboard
+  webapp/access_control.py       leader self-match / delegate group / admin group resolution
+  out/                           generated artefacts (gitignored)
 ```
+

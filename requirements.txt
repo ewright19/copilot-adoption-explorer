@@ -1,2 +1,7 @@
 requests>=2.31,<3
 openpyxl>=3.1,<4
+
+# Only needed for the secured web app (webapp/app.py) - not required for the
+# static HTML/Excel export workflow (run.py).
+flask>=3.0,<4
+msal>=1.28,<2

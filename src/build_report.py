@@ -161,6 +161,70 @@ def build_payload() -> dict:
 
 
 # --------------------------------------------------------------------------
+# 1b. Server-side scoping (used by the secured web app, webapp/app.py)
+# --------------------------------------------------------------------------
+def find_user_index_by_upn(payload: dict, upn: str) -> int | None:
+    """Look up a user's index in payload['users'] by UPN (case-insensitive)."""
+    upn_l = (upn or "").strip().lower()
+    if not upn_l:
+        return None
+    for i, u in enumerate(payload["users"]):
+        if (u.get("u") or "").strip().lower() == upn_l:
+            return i
+    return None
+
+
+def filter_payload_for_leaders(payload: dict, leader_indices: set[int]) -> dict:
+    """Return a NEW payload containing ONLY the people visible to a caller who
+    is authorized for the given leader indices (their own org via self-match,
+    or an org they are an approved delegate/admin for).
+
+    This is the actual security boundary: the result is the ONLY thing ever
+    serialized to a browser by the web app, so a user can never see another
+    leader's data via View Source / DevTools / a modified request, because
+    the server never puts it on the wire in the first place.
+    """
+    users = payload["users"]
+    mgrs = payload["mgrs"]
+
+    visible: set[int] = set()
+    for li in leader_indices:
+        key = str(li)
+        if key in mgrs:
+            visible.update(mgrs[key]["o"])
+        elif 0 <= li < len(users):
+            visible.add(li)  # leader has no direct reports yet - still sees self
+
+    if not visible:
+        return {"meta": payload["meta"], "users": [], "mgrs": {}}
+
+    old_to_new = {old: new for new, old in enumerate(sorted(visible))}
+
+    def remap(i: int) -> int:
+        return old_to_new.get(i, -1)
+
+    new_users = []
+    for old_i in sorted(visible):
+        u = dict(users[old_i])
+        u["mgr"] = remap(u["mgr"]) if u.get("mgr", -1) in old_to_new else -1
+        u["chain"] = [remap(c) for c in u.get("chain", []) if c in old_to_new]
+        new_users.append(u)
+
+    new_mgrs = {}
+    for old_key, m in mgrs.items():
+        old_i = int(old_key)
+        if old_i not in old_to_new:
+            continue
+        o = sorted(remap(x) for x in m["o"] if x in old_to_new)
+        if not o:
+            continue
+        d = sorted(remap(x) for x in m["d"] if x in old_to_new)
+        new_mgrs[str(remap(old_i))] = {"d": d, "o": o}
+
+    return {"meta": payload["meta"], "users": new_users, "mgrs": new_mgrs}
+
+
+# --------------------------------------------------------------------------
 # 2. Exports
 # --------------------------------------------------------------------------
 def write_csv(p: dict) -> pathlib.Path:
@@ -484,6 +548,8 @@ textarea { width: 100%; height: 150px; margin-top: 10px; font-family: Consolas, 
 </style>
 </head>
 <body>
+
+__USER_BANNER__
 
 <header class="card">
   <div>
@@ -891,10 +957,18 @@ window.addEventListener("hashchange", () => {
 """
 
 
+def render_html(p: dict, *, user_banner: str = "") -> str:
+    """Render the dashboard to an HTML string (used by both the static export
+    and the secured web app, which injects a signed-in-user banner and only
+    ever passes an ALREADY SERVER-SIDE-FILTERED payload for the caller's scope).
+    """
+    blob = json.dumps(p, separators=(",", ":")).replace("</", "<\\/")
+    return HTML.replace("__DATA_JSON__", blob).replace("__USER_BANNER__", user_banner)
+
+
 def write_html(p: dict) -> pathlib.Path:
     path = OUT / "copilot-adoption-explorer.html"
-    blob = json.dumps(p, separators=(",", ":")).replace("</", "<\\/")
-    path.write_text(HTML.replace("__DATA_JSON__", blob), encoding="utf-8")
+    path.write_text(render_html(p), encoding="utf-8")
     return path
 
 

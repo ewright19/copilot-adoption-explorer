@@ -1,0 +1,14 @@
+{
+  "_comment": "Copy this to config/access_control.json and fill in real values. That file is gitignored - never commit real group IDs or UPNs.",
+
+  "adminGroupId": "",
+  "_adminGroupId_comment": "Optional. Azure AD group object ID whose members see the ENTIRE tenant (every leader's org). Leave empty to disable full-tenant access entirely.",
+
+  "leaders": [
+    {
+      "leaderUpn": "amber@contoso.com",
+      "delegateGroupId": "00000000-0000-0000-0000-000000000000",
+      "_comment": "Members of delegateGroupId can view amber@contoso.com's org (her + all direct/indirect reports), exactly as if they were Amber. Amber herself does NOT need to be listed here - she already sees her own org automatically just by signing in with her own account."
+    }
+  ]
+}

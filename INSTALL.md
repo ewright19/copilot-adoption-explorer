@@ -28,6 +28,30 @@ Takes about 15 minutes, most of which is waiting for admin consent to propagate.
 
 ---
 
+## Step 0 — Install Python (if not already installed)
+
+Windows (recommended):
+
+```powershell
+winget install -e --id Python.Python.3.12
+```
+
+If you install from python.org, make sure **"Add python.exe to PATH"** is checked.
+
+Close and reopen PowerShell, then verify:
+
+```powershell
+python --version
+python -m pip --version
+```
+
+If `python` is not recognized, check where it was installed and add it to your user PATH:
+
+```powershell
+where.exe python
+python -c "import sys; print(sys.executable)"
+```
+
 ## Step 1 — Unpack and install dependencies
 
 ```powershell
