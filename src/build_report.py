@@ -652,8 +652,8 @@ __USER_BANNER__
   <div class="ctl">
     <label for="selScope">Scope</label>
     <select id="selScope">
-      <option value="org">Entire organisation (all levels)</option>
       <option value="direct">Direct reports only</option>
+      <option value="org">Full org (leader + indirects)</option>
     </select>
   </div>
   <div class="ctl">
@@ -762,8 +762,9 @@ el("subtitle").textContent =
   "  ·  " + U.length + " people  ·  " + MONTHS.length + " months of prompt history";
 
 // ---------- state ----------
-const state = { leader: -1, scope: "org", month: "ALL", access: "all",
+const state = { leader: -1, scope: "direct", month: "ALL", access: "all",
                 heavy: 40, mod: 10, q: "", band: "", sort: "prompts", dir: -1 };
+let scopeTouched = false;
 
 function readHash() {
   if (!location.hash) return;
@@ -974,8 +975,21 @@ function buildCsv() {
 }
 
 // ---------- events ----------
-el("selLeader").addEventListener("change", e => { state.leader = +e.target.value; render(); });
-el("selScope").addEventListener("change", e => { state.scope = e.target.value; render(); });
+el("selLeader").addEventListener("change", e => {
+  state.leader = +e.target.value;
+  // When a person picks a specific leader, default to direct-report view unless
+  // they have explicitly overridden scope in this session.
+  if (state.leader >= 0 && !scopeTouched && state.scope !== "direct") {
+    state.scope = "direct";
+    el("selScope").value = state.scope;
+  }
+  render();
+});
+el("selScope").addEventListener("change", e => {
+  state.scope = e.target.value;
+  scopeTouched = true;
+  render();
+});
 el("selMonth").addEventListener("change", e => { state.month = e.target.value; render(); });
 el("selAccess").addEventListener("change", e => { state.access = e.target.value; render(); });
 el("inHeavy").addEventListener("input", e => { state.heavy = +e.target.value || 1; render(); });
