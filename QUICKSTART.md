@@ -106,9 +106,11 @@ This does the heavy lifting: collects from Graph, builds reports.
 python run.py
 ```
 
-After collection, select the leader in the dashboard to view their direct reports or entire
-organization in the static export. For server-enforced manager access, follow the secured web app
-setup in `INSTALL.md`.
+After collection, select the leader in the dashboard. It defaults to **direct reports only** for
+that leader; you can switch scope to include the leader's full downstream organization. For
+server-enforced manager access, follow the secured web app setup in `INSTALL.md` (tenant admins
+with Global Administrator / Global Reader / Reports Reader / Usage Summary Reports Reader get an
+automatic full-tenant view on sign-in).
 
 **Output files created in `out/`:**
 - `copilot-adoption-explorer.html` — Interactive dashboard (open in browser)
@@ -131,16 +133,15 @@ open out/copilot-adoption-explorer.html
 xdg-open out/copilot-adoption-explorer.html
 ```
 
-### **Dashboard tabs:**
+### **Dashboard controls:**
 
-| Tab | Purpose |
+| Control | Purpose |
 |-----|---------|
-| **Summary** | KPIs: total users, licensed, prompts, avg/user |
-| **Users** | User-level adoption (name, licensed, prompt count, last active) |
-| **Trends** | Monthly trends (volume over time) |
-| **Heavy Users** | Top adopters (sortable by prompt count) |
-| **Org Hierarchy** | Org chart with embedded metrics |
-| **Settings** | Scope toggle (view different orgs) |
+| **Leader / organisation** | Pick tenant-wide view or a specific leader |
+| **Scope** | For a selected leader, choose direct reports only (default) or full org |
+| **Period** | All months or a specific month |
+| **Population** | Licensed + Chat, Licensed only, or Copilot Chat only |
+| **Search / Sort / Bands** | Slice the table and KPI view quickly |
 
 ### **Filter & export:**
 - Click column headers to sort

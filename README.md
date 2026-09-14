@@ -25,9 +25,10 @@ Built to close the gap the native tooling leaves:
 
 ## What it produces
 
-1. **`copilot-adoption-explorer.html`** — a single self-contained file. Pick a leader, choose
-   *direct reports* vs *entire organisation*, filter by month, licence type, or engagement band,
-   search, sort, and export the current view to CSV. No server, no network calls, no install.
+1. **`copilot-adoption-explorer.html`** — a single self-contained file. Pick a leader (defaults to
+   **direct reports only**), optionally switch to the leader's full organisation, filter by month,
+   licence type, or engagement band, search, sort, and export the current view to CSV. No server,
+   no network calls, no install.
    Safe to email to a customer or drop in SharePoint/OneDrive.
 2. **`copilot-adoption.xlsx`** — 6 sheets: Summary, By leader, User detail, Monthly trend,
    Surfaces, Methodology.

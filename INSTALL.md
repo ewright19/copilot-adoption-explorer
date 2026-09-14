@@ -151,8 +151,8 @@ to regenerate the branded files.
 `copilot-adoption-explorer.html` is a single file with no external dependencies. Email it, or
 drop it in SharePoint/OneDrive — it renders correctly in the in-browser preview.
 
-In the dashboard, pick a leader, choose **entire organisation** or **direct reports only**, then
-filter by month, licence type, or engagement band. The URL updates as you filter, so you can
+In the dashboard, pick a leader (it defaults to **direct reports only**), optionally switch to
+**full org (leader + indirects)**, then filter by month, licence type, or engagement band. The URL updates as you filter, so you can
 copy it and send a manager straight to their own view. **Export CSV** exports the current view.
 
 > The HTML embeds the user-level data it displays. Treat it with the same care as any HR report
@@ -192,9 +192,13 @@ notepad config\access_control.json
 
 * A manager does not need to be listed. If their UPN is present in the collected Entra
   hierarchy, they automatically see their direct reports.
+* A tenant admin with **Global Administrator**, **Global Reader**, **Reports Reader**, or
+  **Usage Summary Reports Reader** automatically gets a full-tenant view (no config required).
 * A delegate group grants access to the direct reports of the mapped `leaderUpn`.
-* Leave `adminGroupId` empty unless a reporting administrator needs access to every configured
-  leader's direct reports.
+* `adminGroupId` is optional for non-admin reporting staff; by default it grants a full-tenant
+  view. Set `"adminGroupFullTenant": false` to restrict it to every configured leader's direct reports.
+* Set `"tenantAdminRolesEnabled": false` to disable automatic tenant-admin full-tenant access, or
+  add extra role template IDs via `extraAdminRoleTemplateIds`.
 * `config/access_control.json` is gitignored. Never commit real group IDs or user identifiers.
 
 For local HTTP testing only:
