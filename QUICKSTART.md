@@ -1,5 +1,13 @@
 # Copilot Adoption Explorer — Quick Start Guide
 
+> **Disclaimer:** This repository is an example for demonstration and evaluation purposes only.
+> It is not a Microsoft product, service, or official offering, and is not built, endorsed,
+> warranted, or supported by Microsoft. It is provided **"as is"** without warranties of any
+> kind. Use it at your own risk. You are responsible for evaluating and securing the code,
+> validating its outputs, and meeting all applicable privacy, security, legal, regulatory, and
+> employment requirements before using it in your environment. Do not represent it as a
+> Microsoft-supported solution.
+
 **Get user-level Copilot adoption reporting scoped to any leader's organization in under 15 minutes.**
 
 ---
